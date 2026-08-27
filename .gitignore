@@ -1,5 +1,33 @@
+# Build outputs
 bin/
 obj/
-*.user
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+.idea/**
+
+# Visual Studio
 .vs/
+*.user
+*.suo
+*.userosscache
+*.vcxproj.user
+
+# Visual Studio Code
+.vscode/
+
+# NuGet
+*.nupkg
+project.assets.json
+
+# Rider project files
+*.Rider*
+
+# Logs and local settings
+logs/
 appsettings.Development.json
+
+# OS files
+Thumbs.db
+.DS_Store
