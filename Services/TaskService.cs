@@ -14,22 +14,51 @@ public class TaskService : ITaskService
         _context = context;
     }
 
-    public async Task<IEnumerable<TaskResponseDto>> GetAllTasksAsync(int userId)
+    public async Task<PagedResult<TaskResponseDto>> GetAllTasksAsync(int userId, int page, int pageSize)
     {
-        var tasks = await _context.Tasks
+        var query = _context.Tasks
+            .AsNoTracking()
             .Where(t => t.UserId == userId)
-            .OrderByDescending(t => t.CreatedAt)
+            .OrderByDescending(t => t.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var tasks = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(t => new TaskResponseDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                IsCompleted = t.IsCompleted,
+                Priority = t.Priority,
+                DueDate = t.DueDate,
+                CreatedAt = t.CreatedAt,
+                UserId = t.UserId
+            })
             .ToListAsync();
 
-        return tasks.Select(MapToDto);
+        return new PagedResult<TaskResponseDto>(
+            tasks, page, pageSize, totalCount,
+            (int)Math.Ceiling(totalCount / (double)pageSize));
     }
 
     public async Task<TaskResponseDto?> GetTaskByIdAsync(int id, int userId)
     {
-        var task = await _context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
-
-        return task == null ? null : MapToDto(task);
+        return await _context.Tasks.AsNoTracking()
+            .Where(t => t.Id == id && t.UserId == userId)
+            .Select(t => new TaskResponseDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                IsCompleted = t.IsCompleted,
+                Priority = t.Priority,
+                DueDate = t.DueDate,
+                CreatedAt = t.CreatedAt,
+                UserId = t.UserId
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<TaskResponseDto> CreateTaskAsync(TaskCreateDto dto, int userId)
@@ -44,43 +73,32 @@ public class TaskService : ITaskService
             CreatedAt = DateTime.UtcNow,
             IsCompleted = false
         };
-
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
-
         return MapToDto(task);
     }
 
     public async Task<TaskResponseDto?> UpdateTaskAsync(int id, TaskUpdateDto dto, int userId)
     {
-        var task = await _context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
-
-        if (task == null)
-            return null;
+        var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+        if (task == null) return null;
 
         task.Title = dto.Title;
         task.Description = dto.Description;
         task.IsCompleted = dto.IsCompleted;
         task.Priority = dto.Priority;
         task.DueDate = dto.DueDate;
-
         await _context.SaveChangesAsync();
-
         return MapToDto(task);
     }
 
     public async Task<bool> DeleteTaskAsync(int id, int userId)
     {
-        var task = await _context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
-
-        if (task == null)
-            return false;
+        var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+        if (task == null) return false;
 
         _context.Tasks.Remove(task);
         await _context.SaveChangesAsync();
-
         return true;
     }
 
