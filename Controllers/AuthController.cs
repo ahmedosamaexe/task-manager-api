@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TaskManagerAPI.DTOs;
 using TaskManagerAPI.Services;
 
@@ -9,6 +10,7 @@ namespace TaskManagerAPI.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("auth")]
 [Produces("application/json")]
 public class AuthController : ControllerBase
 {
