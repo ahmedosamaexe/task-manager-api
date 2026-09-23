@@ -62,7 +62,7 @@ dotnet ef database update
 dotnet run
 ```
 
-Swagger is available at `/swagger`.
+Swagger is available at `/swagger` in the Development environment. It is disabled by default in Production.
 
 ## API endpoints
 
@@ -73,7 +73,7 @@ Swagger is available at `/swagger`.
 
 ### Tasks
 
-- `GET /api/tasks`
+- `GET /api/tasks?page=1&pageSize=20` — paginated; `pageSize` is limited to 100
 - `GET /api/tasks/{id}`
 - `POST /api/tasks`
 - `PUT /api/tasks/{id}`
@@ -85,7 +85,9 @@ Protected task endpoints require:
 Authorization: Bearer {token}
 ```
 
-Authentication endpoints are rate-limited to help reduce brute-force and abuse attempts.
+Authentication endpoints are rate-limited to 10 requests per minute per client IP to help reduce brute-force and abuse attempts.
+
+In Development, pending EF Core migrations are applied automatically. In Production, apply reviewed migrations explicitly with `dotnet ef database update` during deployment.
 
 ## License
 
